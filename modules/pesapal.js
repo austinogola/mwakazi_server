@@ -1,6 +1,10 @@
 const Booking = require('../models/Booking');
 const Trip = require('../models/Trip');
 
+const dotenv = require('dotenv');
+
+dotenv.config();
+
 const PESAPAL_CONSUMER_KEY = 'NBwGP0lXC5ZquZtPeYrd4HQFmmNmp4Di'
 const PESAPAL_CONSUMER_SECRET = '4clYISBI8tBWrnIqlNUGmM/Ku/4='
 
@@ -8,8 +12,8 @@ const PESAPAL_CONSUMER_SECRET = '4clYISBI8tBWrnIqlNUGmM/Ku/4='
 const prodUrl='https://pay.pesapal.com/v3/api'
 const testUrl='https://cybqa.pesapal.com/pesapalv3/api'
 
-let serverHost='http://localhost:5010'
-let WebHost='http://localhost:3000'
+let serverHost=process.env.SERVER_HOST;
+let WebHost=process.env.WEB_HOST;
 
 const startPaymentFlow=(booking)=>{
     const {_id}=booking

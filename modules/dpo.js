@@ -1,3 +1,5 @@
+
+
 const Booking = require('../models/Booking');
 const Trip = require('../models/Trip');
 
@@ -15,39 +17,12 @@ const testUrl='https://cybqa.pesapal.com/pesapalv3/api'
 let serverHost=process.env.SERVER_HOST;
 let WebHost=process.env.WEB_HOST;
 
-const getOrderStatus=async(orderId)=>{
-    return new Promise(async(resolve, reject) => {
-        let orderUrl=`${prodUrl}/Transactions/GetTransactionStatus?orderTrackingId=${orderId}`
-        const creds=JSON.parse(await getAuthToken())
-        const token=creds.token
-        console.log(token)
-        fetch(orderUrl,{
-            method:'GET',
-            headers:{
-                "Accept":"application/json",
-                "Content-Type":"application/json",
-                "Authorization":`Bearer ${token}`
-            },
-        })
-        .then((response) => {
-            console.log(response)
-            console.log(Object.keys(response))
-            return response.text()
-        }
-        )
-        .then((result) => {
-            console.log(result)
-            resolve(result)
-        })
-        
-    })
-}
-const startPaymentFlow=(booking)=>{
+const apiUrl='https://secure.3gdirectpay.com/API/v6/'
+const initPaymentFlow=(booking)=>{
     const {_id}=booking
     return new Promise(async(resolve,reject)=>{
         const creds=JSON.parse(await getAuthToken())
         const token=creds.token
-        console.log(token)
         const ipnObj=await registerIPN(token,_id)
         const {ipn_id,url}=ipnObj
         // console.log(ipn_id,url)
@@ -58,6 +33,12 @@ const startPaymentFlow=(booking)=>{
     })
 }
 
+const createToken=()=>{
+    return new Promise((resolve, reject) => {
+        const CompanyToken='8D3DA73D-9D7F-4E09-96D4-3D44E7A83EA3'
+        const Request='createToken'
+    })
+}
 const getAuthToken=()=>{
     let sandboxUrl='https://cybqa.pesapal.com/pesapalv3/api/Auth/RequestToken'
     let realUrl='https://pay.pesapal.com/v3/api/Auth/RequestToken'
@@ -122,8 +103,8 @@ const initBooking=async(booking,token,ipn_id)=>{
             id:_id,currency:'USD',
             amount:0.5,
             description:title,
-            callback_url:`${WebHost}/booking/info?id=${_id}`,
-            cancellation_url:`${WebHost}/booking/info?id=${_id}`,
+            callback_url:`${WebHost}/booking/confirm?id=${_id}`,
+            cancellation_url:`${WebHost}/booking/cancel?id=${_id}`,
             notification_id:ipn_id,
             billing_address:{
                 "email_address":customer.email,
@@ -158,4 +139,4 @@ const initBooking=async(booking,token,ipn_id)=>{
 }
 
 
-module.exports = { initBooking,registerIPN ,getAuthToken,startPaymentFlow,getOrderStatus};
+module.exports = { initBooking,registerIPN ,getAuthToken,startPaymentFlow};

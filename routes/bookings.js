@@ -2,7 +2,7 @@ const express = require('express');
 const Booking = require('../models/Booking'); // Import the Booking model
 const { verifyToken, isAdmin } = require('../middleware/auth'); // Authentication middleware
 const router = express.Router();
-const {registerIPN,getAuthToken,startPaymentFlow}=require('../modules/pesapal')
+const {registerIPN,getAuthToken,startPaymentFlow,getOrderStatus}=require('../modules/pesapal')
 
 // Get all bookings (Admin only)
 router.get('/', verifyToken, isAdmin, async (req, res) => {
@@ -49,29 +49,69 @@ router.post('/', verifyToken, async (req, res) => {
 router.post('/init', verifyToken,async (req, res) => {
   try {
     const { trip, isPaid ,customer} = req.body;
+    console.log('Inited')
+    // let oo=await getOrderStatus('1f0d816c-531d-41cb-bdec-dcbae24136d0')
+    // console.log(oo)
     // console.log(trip, isPaid,customer)
     // const { trip, price, isPaid } = req.body;
     const newBooking = new Booking({
       account: req.user.id, // Use the authenticated user's account ID
       trip,
       customer,
+      created_at:new Date().getTime(),
       isPaid,
     });
 
-    await newBooking.save();
-
     let pesaPalFdBack=await startPaymentFlow(newBooking)
-    console.log(pesaPalFdBack)
+    if(!pesaPalFdBack.error){
+        console.log(newBooking)
+        newBooking["orderId"] =pesaPalFdBack.order_tracking_id
+        await newBooking.save();
+        console.log(newBooking)
+        res.status(200).json({message:'Booking made',status:'success',newBooking,payment_obj:pesaPalFdBack});
+
+        
+    }else{
+        res.status(500).json({message:'Order could not be made',status:'fail'});
+    }
+
+    
+   
     // res.status(201).json(newBooking);
-     res.status(200).json({message:'Booking made',status:'success',newBooking,payment_obj:pesaPalFdBack});
   } catch (error) {
     res.status(500).json({ message: 'Error creating booking', error ,status:'fail'});
   }
 });
 
+router.get('/status/:id',async(req,res)=>{
+    const {id}=req.params
+    let status=await getOrderStatus("76384e89-8332-402c-b8c1-dcbab58aacf0")
+    console.log(status)
+    const theBooking = await Booking.findById(id)
+    res.status(200).json({theBooking,status:"success"})
+})
+
 router.post('/status/:id', async (req, res) => {
-    console.log(req.body)
-    console.log(req.params)
+    const {OrderTrackingId,OrderMerchantReference}=req.body
+    let status=await getOrderStatus(OrderTrackingId)
+    console.log(status)
+    const { payment_method,payment_status_description}=status
+
+    console.log(OrderTrackingId,OrderMerchantReference,payment_method,payment_status_description)
+
+    let isPaid=false
+    if(payment_status_description.toLowerCase()=='completed'){
+        isPaid=true
+    }
+    const updatedBooking = await Booking.findByIdAndUpdate(OrderMerchantReference, 
+        { isPaid, payment_method,payment_status:payment_status_description}, { new: true });
+
+    updatedBooking.save()
+
+    console.log(updatedBooking)
+
+    res.status(200).json({theBooking:updatedBooking})
+
 })
 
 // Update booking payment status (Admin only)

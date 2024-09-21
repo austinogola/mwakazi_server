@@ -17,6 +17,11 @@ const bookingSchema = new mongoose.Schema({
     ref: 'Trip', // Reference to the Trip model
     // required: true,
   },
+  created_at:{type:Number},
+  paid_at:{type:Number},
+  payment_status:{type:String},
+  payment_method:{type:String},
+  orderId:{type:String},
   isPaid: {
     type: Boolean,
     default: false,

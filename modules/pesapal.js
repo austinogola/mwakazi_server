@@ -20,7 +20,7 @@ const getOrderStatus=async(orderId)=>{
         let orderUrl=`${prodUrl}/Transactions/GetTransactionStatus?orderTrackingId=${orderId}`
         const creds=JSON.parse(await getAuthToken())
         const token=creds.token
-        console.log(token)
+        // console.log(token)
         fetch(orderUrl,{
             method:'GET',
             headers:{
@@ -47,7 +47,7 @@ const startPaymentFlow=(booking)=>{
     return new Promise(async(resolve,reject)=>{
         const creds=JSON.parse(await getAuthToken())
         const token=creds.token
-        console.log(token)
+        // console.log(token)
         const ipnObj=await registerIPN(token,_id)
         const {ipn_id,url}=ipnObj
         // console.log(ipn_id,url)

@@ -21,7 +21,8 @@ router.get('/', async (req, res) => {
 
   	let limit=size || 10
 
-  	const trips=await Trip.find({ images: { $ne: [] } }).limit(limit)
+  	// const trips=await Trip.find({ images: { $ne: [] } }).limit(limit)
+    const trips=await Trip.find({ catch_phrase: { $exists: true, $ne: "" } }).sort({ rating: -1, 'images.length': -1 }).limit(limit)
 
   	console.log(trips)
 
@@ -50,7 +51,7 @@ router.post('/', async (req, res) => {
   try {
 
   	let {activities,destination,title,duration,inclusives,dates,description,
-  	categories,price,rating,images}=req.body
+  	categories,price,rating,images,catch_phrase,itinerary,blog_contents}=req.body
 
   	if(!title || !destination || !duration || !dates ||!price  ){
   		return res.status(500).json({ message: 'Error creating trip. Missing details', });
@@ -58,12 +59,14 @@ router.post('/', async (req, res) => {
 
   	let actIds=[]
   	if(activities && activities[0]){
-  		activities.forEach(async name=>{
-  			let theAct=await Activity.findOneAndUpdate({name},{name},{new:true,upsert:true})
+  		activities.forEach(async obj=>{
+        const {name,category}=obj
+  			let theAct=await Activity.findOneAndUpdate({name,category},{name,category},{new:true,upsert:true})
   			console.log(theAct)
   			actIds.push(theAct._id)
   		})
   	}
+    rating=rating || 1
 
   	const {country,continent,locale}=destination
   	let destId=await Destination.findOneAndUpdate(
@@ -74,8 +77,8 @@ router.post('/', async (req, res) => {
     images=images || []
 
   	const newTrip = new Trip({activities:actIds,destination:destId,
-  		title,duration,inclusives,dates,description,
-  	categories,price,rating,images})	
+  		title,duration,inclusives,dates,description,blog_contents,
+  	categories,price,rating,images,catch_phrase,itinerary})	
 
   	await newTrip.save()
 

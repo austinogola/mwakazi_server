@@ -30,13 +30,13 @@ const getOrderStatus=async(orderId)=>{
             },
         })
         .then((response) => {
-            console.log(response)
-            console.log(Object.keys(response))
-            return response.text()
+            // console.log(response)
+            // console.log(Object.keys(response))
+            return response.json()
         }
         )
         .then((result) => {
-            console.log(result)
+            // console.log(result)
             resolve(result)
         })
         
@@ -120,7 +120,7 @@ const initBooking=async(booking,token,ipn_id)=>{
 
         const orderData={
             id:_id,currency:'USD',
-            amount:0.5,
+            amount:price,
             description:title,
             callback_url:`${WebHost}/booking/info?id=${_id}`,
             cancellation_url:`${WebHost}/booking/info?id=${_id}`,

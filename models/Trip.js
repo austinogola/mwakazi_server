@@ -14,14 +14,20 @@ const tripSchema = new mongoose.Schema({
   exclusives:[String],
   images: [{ type: String }],
   dates: [Date],
-  description: String,
+  description: {type:String},
+  catch_phrase:{type:String},
+  itinerary:[String],
   categories: [String],
+  blog_contents:[{
+      type: mongoose.Schema.Types.ObjectId,
+    ref: 'Blog'
+  }],
   activities: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Activity'
   }],
   price: { type: Number, required: true },
-  rating:{type:Number}
+  rating:{type:Number,default:1}
 });
 
 const Trip = mongoose.model('Trip', tripSchema);

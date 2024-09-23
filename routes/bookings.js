@@ -1,4 +1,5 @@
 const express = require('express');
+const Trip = require('../models/Trip');
 const Booking = require('../models/Booking'); // Import the Booking model
 const { verifyToken, isAdmin } = require('../middleware/auth'); // Authentication middleware
 const router = express.Router();
@@ -19,7 +20,7 @@ router.get('/', verifyToken, isAdmin, async (req, res) => {
 router.get('/:id', verifyToken, isAdmin, async (req, res) => {
   console.log('Initiated',req)
   try {
-    const booking = await Booking.findById(req.params.id).populate('account').populate('trip');
+    const booking = await Booking.findById(req.params.id)
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
     res.status(200).json(booking);
   } catch (error) {
@@ -31,11 +32,13 @@ router.get('/:id', verifyToken, isAdmin, async (req, res) => {
 router.post('/', verifyToken, async (req, res) => {
   try {
     const { trip, price, isPaid,credentials } = req.body;
+    const theTrip = Trips.findById(trip)
     const newBooking = new Booking({
       account: req.user.id, // Use the authenticated user's account ID
       trip,
       price,
       isPaid,
+      amount:theTrip.price
     });
 
     await newBooking.save();
@@ -50,14 +53,14 @@ router.post('/init', verifyToken,async (req, res) => {
   try {
     const { trip, isPaid ,customer} = req.body;
     console.log('Inited')
-    // let oo=await getOrderStatus('1f0d816c-531d-41cb-bdec-dcbae24136d0')
-    // console.log(oo)
-    // console.log(trip, isPaid,customer)
-    // const { trip, price, isPaid } = req.body;
+    const theTrip=await Trip.findById(trip)
+    console.log(theTrip)
     const newBooking = new Booking({
       account: req.user.id, // Use the authenticated user's account ID
       trip,
       customer,
+      amount:theTrip.price,
+      currency:"USD",
       created_at:new Date().getTime(),
       isPaid,
     });
@@ -85,9 +88,14 @@ router.post('/init', verifyToken,async (req, res) => {
 
 router.get('/status/:id',async(req,res)=>{
     const {id}=req.params
-    let status=await getOrderStatus("76384e89-8332-402c-b8c1-dcbab58aacf0")
-    console.log(status)
     const theBooking = await Booking.findById(id)
+    const theTrip=await Trip.findById(theBooking.trip)
+    // let status=await getOrderStatus(theBooking.orderId)
+    // console.log(status)
+    console.log(theTrip);
+    
+    // theBooking.amount=theTrip.price
+    
     res.status(200).json({theBooking,status:"success"})
 })
 
@@ -95,18 +103,27 @@ router.post('/status/:id', async (req, res) => {
     const {OrderTrackingId,OrderMerchantReference}=req.body
     let status=await getOrderStatus(OrderTrackingId)
     console.log(status)
-    const { payment_method,payment_status_description}=status
+    let { payment_method,payment_status_description,error}=status
 
-    console.log(OrderTrackingId,OrderMerchantReference,payment_method,payment_status_description)
 
     let isPaid=false
-    if(payment_status_description.toLowerCase()=='completed'){
+    let updatedBooking
+    console.log(payment_method,payment_status_description,error)
+    if(!error){
         isPaid=true
+         updatedBooking = await Booking.findByIdAndUpdate(OrderMerchantReference, 
+            { isPaid, payment_method,payment_status:payment_status_description}, { new: true });
+        
+    }else{
+        let payment_status=error.message
+        updatedBooking = await Booking.findByIdAndUpdate(OrderMerchantReference, 
+            { isPaid, payment_method,payment_status}, { new: true });
     }
-    const updatedBooking = await Booking.findByIdAndUpdate(OrderMerchantReference, 
-        { isPaid, payment_method,payment_status:payment_status_description}, { new: true });
-
     updatedBooking.save()
+    // console.log(OrderTrackingId,OrderMerchantReference,payment_method,payment_status_description)
+
+    
+    
 
     console.log(updatedBooking)
 

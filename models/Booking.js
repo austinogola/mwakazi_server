@@ -17,6 +17,7 @@ const bookingSchema = new mongoose.Schema({
     ref: 'Trip', // Reference to the Trip model
     // required: true,
   },
+  amount:{type:Number},
   created_at:{type:Number},
   paid_at:{type:Number},
   payment_status:{type:String},

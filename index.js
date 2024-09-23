@@ -16,7 +16,9 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000',
   'http://example.com',
-  'https://anotherdomain.com'
+  'https://anotherdomain.com',
+  "https://www.mwakaziadventures.com",
+  "https://mwakaziadventures.com"
 ];            
 app.use(cors({
 	origin:allowedOrigins,

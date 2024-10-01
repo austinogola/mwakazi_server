@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 const tripRoutes = require('./routes/trips');
 const authRoutes = require('./routes/auth'); 
 const bookingRoutes = require('./routes/bookings');
+const activitiesRoutes = require('./routes/activities');
 
 const dotenv = require('dotenv');
 
@@ -35,6 +36,8 @@ app.use(cookieParser());
 
 app.use('/api/v1/trips', tripRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
+app.use('/api/v1/activities', activitiesRoutes);
+
 app.use('/auth', authRoutes);
 
 const dbURI = process.env.MONGODB_URI;

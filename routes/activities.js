@@ -5,8 +5,76 @@ const Destination = require('../models/Destination');
 const { verifyToken, isAdmin } = require('../middleware/auth'); // Authentication middleware
 const router = express.Router();
 
-// Get all trips
+// Get all activities
 router.get('/', async (req, res) => {
+  try {
+      const { name, category, limit } = req.query;
+      let query = {};
+
+      // Filtering by name if provided
+      if (name) {
+          query.name = { $regex: new RegExp(name, 'i') }; // Case-insensitive search
+      }
+
+      // Filtering by category if provided
+      if (category) {
+          query.category = { $regex: new RegExp(category, 'i') }; // Case-insensitive search
+      }
+
+      // Limit the results if a limit is provided, default to 10
+      const activities = await Activity.find(query).limit(parseInt(limit) || 10);
+
+      res.status(200).json(activities);
+  } catch (error) {
+      res.status(500).json({ message: 'Error fetching activities', error });
+  }
+});
+router.get('/activities-by-category', async (req, res) => {
+  try {
+    const activities = await Activity.aggregate([
+      {
+        $lookup: {
+          from: 'trips', // collection name for Trip model
+          localField: '_id', // activity _id in the Activity model
+          foreignField: 'activities', // activities array in the Trip model
+          as: 'trips' // store the matched trips in an array named 'trips'
+        }
+      },
+      // Add a field to count the number of trips for each activity
+      {
+        $addFields: {
+          tripCount: { $size: '$trips' } // count the size of the trips array
+        }
+      },
+      // Group activities by category and sort by number of trips in descending order
+      {
+        $group: {
+          _id: '$category', // group by the category field
+          activities: {
+            $push: {
+              _id: '$_id',
+              name: '$name',
+              category: '$category',
+              tripCount: '$tripCount'
+            }
+          }
+        }
+      },
+      // Sort each category's activities by trip count in descending order
+      {
+        $project: {
+          activities: { $sortArray: { input: '$activities', sortBy: { tripCount: -1 } } }
+        }
+      }
+    ])
+
+    res.status(200).json(activities);
+  }
+  catch (error) {
+    res.status(500).json({ message: 'Error fetching activities', status:"fail" });
+  }
+})
+router.get('/aff', async (req, res) => {
   try {
   	
   	console.log(req.query)
@@ -21,7 +89,7 @@ router.get('/', async (req, res) => {
 
   	let limit=size || 10
 
-  	// const trips=await Trip.find({ images: { $ne: [] } }).limit(limit)
+  	const activites=Activity.find({ images: { $ne: [] } }).limit(limit)
     const trips=await Trip.find({ catch_phrase: { $exists: true, $ne: "" } }).sort({ rating: -1, 'images.length': -1 }).limit(limit)
 
   	
@@ -117,8 +185,8 @@ router.put('/:id', async (req, res) => {
   try {
     console.log(req.body)
     console.log(req.params)
-    const updatedTrip = await Trip.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedTrip) return res.status(404).json({ message: 'Trip not found' });
+    const updatedTrip = await Activity.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedTrip) return res.status(404).json({ message: 'Activity not found' });
     res.status(200).json(updatedTrip);
   } catch (error) {
     res.status(500).json({ message: 'Error updating trip', error });

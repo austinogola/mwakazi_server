@@ -128,6 +128,7 @@ router.put('/:id', async (req, res) => {
 // Delete a trip (Admin only)
 router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
   try {
+    console.log(req.params.id)
     const deletedTrip = await Trip.findByIdAndDelete(req.params.id);
     if (!deletedTrip) return res.status(404).json({ message: 'Trip not found' });
     res.status(200).json({ message: 'Trip deleted' });

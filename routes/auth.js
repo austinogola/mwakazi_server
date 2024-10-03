@@ -65,7 +65,9 @@ router.post('/login', async (req, res) => {
 
 router.get('/config', verifyToken,async (req, res) => {
   console.log('config accessed')
-  res.status(200).json({status:"success"})
+  console.log(req.user)
+  const theAccount=await Account.findById(req.user.id)
+  res.status(200).json({status:"success",account:theAccount})
 })
 
 module.exports = router;

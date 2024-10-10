@@ -32,13 +32,10 @@ const tripSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
     ref: 'Blog'
   }],
-  activities: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Activity'
-  }],
+  activities: [String],
   price: { type: Number, required: true },
   rating:{type:Number,default:1}
 });
 
-const Trip = mongoose.model('Trip', tripSchema);
-module.exports = Trip;
+const NewTrip = mongoose.model('NewTrip', tripSchema);
+module.exports = NewTrip;

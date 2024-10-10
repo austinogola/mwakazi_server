@@ -56,7 +56,7 @@ router.post('/init', verifyToken,async (req, res) => {
     const theTrip=await Trip.findById(trip)
     console.log(theTrip)
     const newBooking = new Booking({
-      account: req.user.id, // Use the authenticated user's account ID
+      // account: req.user.id, // Use the authenticated user's account ID
       trip,
       customer,
       amount:theTrip.price,

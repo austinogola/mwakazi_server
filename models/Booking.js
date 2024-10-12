@@ -6,15 +6,16 @@ const bookingSchema = new mongoose.Schema({
     ref: 'Account', // Reference to the Account model
     // required: true,
   },
-  customer:{
-    name:String,
-    email:String,
-    phone:String,
-    address:String
-  },
+  customer:{},
+  item_details:{},
   trip: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Trip', // Reference to the Trip model
+    // required: true,
+  },
+  accomodation: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Accomodation', // Reference to the Trip model
     // required: true,
   },
   amount:{type:Number},

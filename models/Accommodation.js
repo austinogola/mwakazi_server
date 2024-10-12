@@ -21,10 +21,7 @@ const accommodationSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    paymentOptions: {
-        type: [String],
-        required: true
-    }
+    images:[String]
 });
 
 const Accommodation = mongoose.model('Accommodation', accommodationSchema);

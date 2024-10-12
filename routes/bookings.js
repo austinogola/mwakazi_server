@@ -65,34 +65,53 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/init', verifyToken,async (req, res) => {
+router.post('/init',async (req, res) => {
   try {
-    const { trip, isPaid ,customer} = req.body;
-    console.log('Inited')
-    const theTrip=await Trip.findById(trip)
-    console.log(theTrip)
-    const newBooking = new Booking({
-      // account: req.user.id, // Use the authenticated user's account ID
-      trip,
-      customer,
-      amount:theTrip.price,
-      currency:"USD",
-      created_at:new Date().getTime(),
-      isPaid,
-    });
+    const { trip, isPaid ,customer,accommodation,days,guests,startDate,endDate} = req.body;
+    let newBooking;
+    if (trip) {
+      const theTrip = await Trip.findById(trip);
+      newBooking = new Booking({
+        // account: req.user.id, // Use the authenticated user's account ID
+        trip,
+        item_details:{type:'trip', title:`${theTrip.title} for ${guests}`, guests, total_price:theTrip.price * guests},
+        customer,
+        amount:theTrip.price * guests,
+        currency:"USD",
+        created_at:new Date().getTime(),
+        isPaid,
+      });
+  } else if (accommodation) {
+      const theAccommodation = await Accommodation.findById(accommodation);
+      newBooking = new Booking({
+          // account: req.user.id, // Use the authenticated user's account ID
+          accommodation,
+          item_details:{type:'accommodation', title:`Accommodation at ${theAccommodation.location} for ${days} days`, 
+            days, total_price:theAccommodation.dailyRate*days,startDate,endDate},
 
-    let pesaPalFdBack=await startPaymentFlow(newBooking)
-    if(!pesaPalFdBack.error){
-        console.log(newBooking)
-        newBooking["orderId"] =pesaPalFdBack.order_tracking_id
-        await newBooking.save();
-        console.log(newBooking)
-        res.status(200).json({message:'Booking made',status:'success',newBooking,payment_obj:pesaPalFdBack});
+          isPaid,
+          amount: theAccommodation.dailyRate*days,
+          currency:"USD",
+          created_at:new Date().getTime(),
+          customer,
+      });
+  } else {
+      return res.status(400).json({ message: 'Trip or Accommodation must be provided' });
+  }
+    
+  await newBooking.save();
+  let pesaPalFdBack=await startPaymentFlow(newBooking)
+  if(!pesaPalFdBack.error){
+      console.log(newBooking)
+      newBooking["orderId"] =pesaPalFdBack.order_tracking_id
+      await newBooking.save();
+      console.log(newBooking)
+      res.status(200).json({message:'Booking made',status:'success',newBooking,payment_obj:pesaPalFdBack});
 
-        
-    }else{
-        res.status(500).json({message:'Order could not be made',status:'fail'});
-    }
+      
+  }else{
+      res.status(500).json({message:'Order could not be made',status:'fail'});
+  }
 
     
    

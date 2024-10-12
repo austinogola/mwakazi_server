@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const Trip = require('../models/Trip');
+const Accommodation = require('../models/Accommodation');
 
 const dotenv = require('dotenv');
 
@@ -113,14 +114,15 @@ const initBooking=async(booking,token,ipn_id)=>{
     let theTestUrl=`${testUrl}/Transactions/SubmitOrderRequest`
     let theProdUrl=`${prodUrl}/Transactions/SubmitOrderRequest`
     return new Promise(async(resolve,reject)=>{
-        const {customer,_id,trip}=booking
-        const theTrip=await Trip.findById(trip)
-        const {price,title}=theTrip
+        const {customer,_id,trip, accommodation,item_details}=booking
+        // const theTrip=await Trip.findById(trip)
+        // const {price,title}=theTrip
+        const {total_price,title,type}=item_details
         const currency='USD'
 
         const orderData={
-            id:_id,currency:'USD',
-            amount:price,
+            id:_id,currency,
+            amount:total_price,
             description:title,
             callback_url:`${WebHost}/booking/info?id=${_id}`,
             cancellation_url:`${WebHost}/booking/info?id=${_id}`,
@@ -128,8 +130,8 @@ const initBooking=async(booking,token,ipn_id)=>{
             billing_address:{
                 "email_address":customer.email,
                 "phone_number":customer.phone,
-                "first_name":customer.name.split(" ")[0],
-                "last_name":customer.name.split(" ")[1],
+                "first_name":customer.firstName,
+                "last_name":customer.lastName,
                 "country_code":customer.country_code,
                 "city":customer.city,
                 "state":customer.state,

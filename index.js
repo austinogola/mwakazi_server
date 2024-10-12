@@ -8,6 +8,7 @@ const tripRoutes = require('./routes/trips');
 const authRoutes = require('./routes/auth'); 
 const bookingRoutes = require('./routes/bookings');
 const activitiesRoutes = require('./routes/activities');
+const accommodationsRoutes = require('./routes/accommodations');
 
 const dotenv = require('dotenv');
 
@@ -37,6 +38,7 @@ app.use(cookieParser());
 app.use('/api/v1/trips', tripRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
 app.use('/api/v1/activities', activitiesRoutes);
+app.use('/api/v1/accommodations', accommodationsRoutes);
 
 app.use('/auth', authRoutes);
 

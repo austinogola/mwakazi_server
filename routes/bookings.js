@@ -1,6 +1,7 @@
 const express = require('express');
 const Trip = require('../models/Trip');
 const Booking = require('../models/Booking'); // Import the Booking model
+const Accommodation = require('../models/Accommodation'); // Import the Accommodation model
 const { verifyToken, isAdmin } = require('../middleware/auth'); // Authentication middleware
 const router = express.Router();
 const {registerIPN,getAuthToken,startPaymentFlow,getOrderStatus}=require('../modules/pesapal')
@@ -31,15 +32,30 @@ router.get('/:id', verifyToken, isAdmin, async (req, res) => {
 // Create a new booking (Authenticated users)
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const { trip, price, isPaid,credentials } = req.body;
-    const theTrip = Trips.findById(trip)
-    const newBooking = new Booking({
-      account: req.user.id, // Use the authenticated user's account ID
-      trip,
-      price,
-      isPaid,
-      amount:theTrip.price
-    });
+    const { trip, accommodation, price, isPaid, credentials } = req.body;
+    let newBooking;
+
+    if (trip) {
+        const theTrip = await Trip.findById(trip);
+        newBooking = new Booking({
+            account: req.user.id, // Use the authenticated user's account ID
+            trip,
+            price,
+            isPaid,
+            amount: theTrip.price
+        });
+    } else if (accommodation) {
+        const theAccommodation = await Accommodation.findById(accommodation);
+        newBooking = new Booking({
+            account: req.user.id, // Use the authenticated user's account ID
+            accommodation,
+            price,
+            isPaid,
+            amount: theAccommodation.dailyRate
+        });
+    } else {
+        return res.status(400).json({ message: 'Trip or Accommodation must be provided' });
+    }
 
     await newBooking.save();
     startPaymentFlow(newBooking)
